@@ -22,13 +22,10 @@ cd your-repo
 # 2. Fire up a virtual env (optional but tidy)
 python -m venv venv && source venv/bin/activate
 
-# 3. Install what we need
-pip install -r requirements.txt
-
-# 4. Go!
+# 3. Go!
 streamlit run app.py
 
----
+
 
 
 
