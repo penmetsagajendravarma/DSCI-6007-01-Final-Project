@@ -30,29 +30,7 @@ streamlit run app.py
 
 ---
 
-## 🗺️ Project tour (a.k.a. “What are all these files?”)
 
-| File / folder | What’s inside |
-|---------------|---------------|
-| **app.py** | The Streamlit front-end—run this and you’re live. |
-| **analysis.html** | Exploratory Data Analysis in a single self-contained HTML (open in any browser). |
-| **forecast.html** | Interactive ARIMA vs LSTM comparison—see which model wins on your data. |
-| **error.html** | Sample error page we surface when the upload or model goes sideways. |
-| **result.html** | Clean overlay of *actual vs predicted* values, ready for screenshots. |
-| **Tesla-Dataset.csv** | A tidy TSLA time-series you can play with right away. |
-| **Arima-Model.png** | A snack-sized diagram of the ARIMA workflow—handy for reports. |
-| **Section-01_Team-02_Final_Project-Technical_Report.docx** | The 10-page deep dive: methods, results, references. |
-| **DS6007-01-Section01-Team02-Final project.pptx** | A crisp 12-slide deck—use it for lightning talks or demo day. |
-
-*(Everything else—`requirements.txt`, Dockerfile, etc.—lives in the usual places.)*
-
----
-
-## 📊 Sample run in 30 seconds
-
-1. Fire up the app with  
-   ```bash
-   streamlit run app.py
 
 
 
