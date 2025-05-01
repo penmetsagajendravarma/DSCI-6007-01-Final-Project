@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Time Series Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 1200px; }
+        .card { margin-bottom: 20px; }
+        .hidden { display: none; }
+        .chart-container { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Advanced Time Series Analyzer</h1>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Step 1: Upload Data</h5>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">CSV File:</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".csv">
+                        <small class="form-text text-muted">Upload a CSV file with time series data. One column should contain date/time information.</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="dataPreview" class="card hidden">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Step 2: Preview Data</h5>
+            </div>
+            <div class="card-body">
+                <div id="previewContent"></div>
+            </div>
+        </div>
+
+        <div id="analysisForm" class="card hidden">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Step 3: Configure Analysis</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs mb-3" id="analysisTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="model-tab" data-bs-toggle="tab" data-bs-target="#model-pane" type="button" role="tab">Model</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="forecast-tab" data-bs-toggle="tab" data-bs-target="#forecast-pane" type="button" role="tab">Forecast</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="analysisTabContent">
+                    <div class="tab-pane fade show active" id="model-pane" role="tabpanel" tabindex="0">
+                        <form id="modelForm" action="/analyze" method="post">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="column" class="form-label">Select Column to Analyze:</label>
+                                    <select class="form-select" id="column" name="column" required>
+                                        <!-- Options will be added dynamically -->
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="model_type" class="form-label">Model Type:</label>
+                                    <select class="form-select" id="model_type" name="model_type">
+                                        <option value="arima">ARIMA</option>
+                                        <option value="sarima">SARIMA (Seasonal)</option>
+                                        <option value="lstm">LSTM Neural Network</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="split_ratio" class="form-label">Training/Test Split Ratio:</label>
+                                    <input type="number" class="form-control" id="split_ratio" name="split_ratio" min="0.5" max="0.95" step="0.05" value="0.8">
+                                </div>
+                            </div>
+
+                            <div id="arima_params" class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="p" class="form-label">p (AR order):</label>
+                                    <input type="number" class="form-control" id="p" name="p" min="0" max="10" value="5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="d" class="form-label">d (Differencing):</label>
+                                    <input type="number" class="form-control" id="d" name="d" min="0" max="3" value="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="q" class="form-label">q (MA order):</label>
+                                    <input type="number" class="form-control" id="q" name="q" min="0" max="10" value="0">
+                                </div>
+                            </div>
+
+                            <div id="sarima_params" class="row mb-3 hidden">
+                                <div class="col-md-3">
+                                    <label for="P" class="form-label">P (Seasonal AR):</label>
+                                    <input type="number" class="form-control" id="P" name="P" min="0" max="3" value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="D" class="form-label">D (Seasonal Diff):</label>
+                                    <input type="number" class="form-control" id="D" name="D" min="0" max="2" value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="Q" class="form-label">Q (Seasonal MA):</label>
+                                    <input type="number" class="form-control" id="Q" name="Q" min="0" max="3" value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="s" class="form-label">s (Season Period):</label>
+                                    <input type="number" class="form-control" id="s" name="s" min="2" max="365" value="12">
+                                </div>
+                            </div>
+
+                            <div id="lstm_params" class="row mb-3 hidden">
+                                <div class="col-md-4">
+                                    <label for="look_back" class="form-label">Look Back (Time Steps):</label>
+                                    <input type="number" class="form-control" id="look_back" name="look_back" min="1" max="10" value="3">
+                                </div>
+<div class="col-md-4">
+                                    <label for="epochs" class="form-label">Epochs:</label>
+                                    <input type="number" class="form-control" id="epochs" name="epochs" min="10" max="500" value="50">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="batch_size" class="form-label">Batch Size:</label>
+                                    <input type="number" class="form-control" id="batch_size" name="batch_size" min="1" max="64" value="1">
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">Run Analysis</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="forecast-pane" role="tabpanel" tabindex="0">
+                        <form id="forecastForm" action="/forecast" method="post">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="forecast_column" class="form-label">Select Column to Forecast:</label>
+                                    <select class="form-select" id="forecast_column" name="column" required>
+                                        <!-- Options will be added dynamically -->
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="forecast_model_type" class="form-label">Model Type:</label>
+                                    <select class="form-select" id="forecast_model_type" name="model_type">
+                                        <option value="arima">ARIMA</option>
+                                        <option value="sarima">SARIMA (Seasonal)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="forecast_periods" class="form-label">Forecast Periods:</label>
+                                    <input type="number" class="form-control" id="forecast_periods" name="forecast_periods" min="1" max="365" value="30">
+                                </div>
+                            </div>
+
+                            <div id="forecast_arima_params" class="row mb-3">
+                                <div class="col-md-4">
+                                    <label for="forecast_p" class="form-label">p (AR order):</label>
+                                    <input type="number" class="form-control" id="forecast_p" name="p" min="0" max="10" value="5">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="forecast_d" class="form-label">d (Differencing):</label>
+                                    <input type="number" class="form-control" id="forecast_d" name="d" min="0" max="3" value="1">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="forecast_q" class="form-label">q (MA order):</label>
+                                    <input type="number" class="form-control" id="forecast_q" name="q" min="0" max="10" value="0">
+                                </div>
+                            </div>
+
+                            <div id="forecast_sarima_params" class="row mb-3 hidden">
+                                <div class="col-md-3">
+                                    <label for="forecast_P" class="form-label">P (Seasonal AR):</label>
+                                    <input type="number" class="form-control" id="forecast_P" name="P" min="0" max="3" value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="forecast_D" class="form-label">D (Seasonal Diff):</label>
+                                    <input type="number" class="form-control" id="forecast_D" name="D" min="0" max="2" value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="forecast_Q" class="form-label">Q (Seasonal MA):</label>
+                                    <input type="number" class="form-control" id="forecast_Q" name="Q" min="0" max="3" value="1">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="forecast_s" class="form-label">s (Season Period):</label>
+                                    <input type="number" class="form-control" id="forecast_s" name="s" min="2" max="365" value="12">
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary">Generate Forecast</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // File upload form submission
+            document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        return;
+                    }
+
+                    // Display data preview
+                    const previewDiv = document.getElementById('dataPreview');
+                    previewDiv.classList.remove('hidden');
+
+                    const previewContent = document.getElementById('previewContent');
+                    previewContent.innerHTML = `
+                        <p><strong>Rows:</strong> ${data.rows}</p>
+                        <p><strong>Columns:</strong> ${data.columns.join(', ')}</p>
+                        <h6>Data Preview:</h6>
+                        ${data.preview}
+                    `;
+
+                    // Populate select options
+                    const columnSelect = document.getElementById('column');
+                    const forecastColumnSelect = document.getElementById('forecast_column');
+                    columnSelect.innerHTML = '';
+                    forecastColumnSelect.innerHTML = '';
+
+                    data.columns.forEach(column => {
+                        if (column.toLowerCase() !== 'date') {
+                            const option = document.createElement('option');
+                            option.value = column;
+                            option.textContent = column;
+                            columnSelect.appendChild(option);
+
+                            const forecastOption = document.createElement('option');
+                            forecastOption.value = column;
+                            forecastOption.textContent = column;
+                            forecastColumnSelect.appendChild(forecastOption);
+                        }
+                    });
+
+                    // Show analysis form
+                    document.getElementById('analysisForm').classList.remove('hidden');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred during upload.');
+                });
+            });
+
+            // Toggle model parameters based on selected model type
+            document.getElementById('model_type').addEventListener('change', function() {
+                const modelType = this.value;
+
+                document.getElementById('arima_params').classList.add('hidden');
+                document.getElementById('sarima_params').classList.add('hidden');
+                document.getElementById('lstm_params').classList.add('hidden');
+
+                if (modelType === 'arima') {
+                    document.getElementById('arima_params').classList.remove('hidden');
+                } else if (modelType === 'sarima') {
+                    document.getElementById('sarima_params').classList.remove('hidden');
+                } else if (modelType === 'lstm') {
+                    document.getElementById('lstm_params').classList.remove('hidden');
+                }
+            });
+
+            // Toggle forecast parameters based on selected model type
+            document.getElementById('forecast_model_type').addEventListener('change', function() {
+                const modelType = this.value;
+
+                document.getElementById('forecast_arima_params').classList.add('hidden');
+                document.getElementById('forecast_sarima_params').classList.add('hidden');
+
+                if (modelType === 'arima') {
+                    document.getElementById('forecast_arima_params').classList.remove('hidden');
+                } else if (modelType === 'sarima') {
+                    document.getElementById('forecast_sarima_params').classList.remove('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

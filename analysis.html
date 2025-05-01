@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Series Analysis Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container { max-width: 1200px; }
+        .card { margin-bottom: 20px; }
+        .plot-container { text-align: center; background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .nav-pills .nav-link.active { background-color: #0d6efd; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="text-center mb-4">Time Series Analysis Results</h1>
+
+        <div class="d-flex justify-content-between mb-3">
+            <h3>Column: {{ results.column_name }}</h3>
+            <a href="/" class="btn btn-primary">Back to Home</a>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card sticky-top" style="top: 20px;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Navigation</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="nav flex-column nav-pills" id="analysis-tabs" role="tablist">
+                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#overview" type="button">Overview</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#time-series" type="button">Time Series</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#stationarity" type="button">Stationarity</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#acf-pacf" type="button">ACF/PACF</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#decomposition" type="button">Decomposition</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#predictions" type="button">Predictions</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#residuals" type="button">Residuals</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Model Information</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if results.model_info %}
+                                <table class="table table-striped">
+                                    <tr>
+                                        <th>Model Type</th>
+                                        <td>{{ results.model_info.type }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Parameters</th>
+                                        <td>{{ results.model_info.params }}</td>
+                                    </tr>
+                                    {% if results.model_info.aic %}
+                                    <tr>
+                                        <th>AIC</th>
+                                        <td>{{ results.model_info.aic|round(2) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if results.model_info.bic %}
+                                    <tr>
+                                        <th>BIC</th>
+                                        <td>{{ results.model_info.bic|round(2) }}</td>
+                                    </tr>
+                                    {% endif %}
+                                </table>
+                                {% else %}
+                                <p>No model information available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if results.error_metrics %}
+                        <div class="card mt-3">
+                            <div class="card-header bg-success text-white">
+                                <h5 class="mb-0">Model Performance</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <tr>
+                                        <th>Mean Squared Error (MSE)</th>
+                                        <td>{{ results.error_metrics.MSE|round(4) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Root Mean Squared Error (RMSE)</th>
+                                        <td>{{ results.error_metrics.RMSE|round(4) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Mean Absolute Error (MAE)</th>
+                                        <td>{{ results.error_metrics.MAE|round(4) }}</td>
+                                    </tr>
+                                    {% if results.error_metrics.MAPE is not none %}
+                                    <tr>
+                                        <th>Mean Absolute Percentage Error (MAPE)</th>
+                                        <td>{{ results.error_metrics.MAPE|round(2) }}%</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <th>Symmetric Mean Absolute Percentage Error (SMAPE)</th>
+                                        <td>{{ results.error_metrics.SMAPE|round(2) }}%</td>
+                                    </tr>
+                                    <tr>
+                                        <th>R-squared (R²)</th>
+                                        <td>{{ results.error_metrics.R2|round(4) }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Time Series Tab -->
+                    <div class="tab-pane fade" id="time-series" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Original Time Series</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if results.plots.original %}
+                                <div class="plot-container">
+                                    <img src="data:image/png;base64,{{ results.plots.original }}" class="img-fluid" alt="Original Time Series">
+                                </div>
+                                {% else %}
+                                <p>No plot available.</p>
+                                {% endif %}
+
+                                <div class="mt-3">
+                                    <h6>Observations:</h6>
+                                    <ul>
+                                        <li>Examine the time series for trends, seasonality, and other patterns.</li>
+                                        <li>Check for outliers or anomalies in the data.</li>
+                                        <li>Note any obvious structural changes over time.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stationarity Tab -->
+                    <div class="tab-pane fade" id="stationarity" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Stationarity Analysis</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6>Augmented Dickey-Fuller Test Results:</h6>
+                                {% if results.stationarity %}
+                                <table class="table table-striped">
+                                    <tr>
+                                        <th>Test Statistic</th>
+                                        <td>{{ results.stationarity.test_statistic|round(4) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>p-value</th>
+                                        <td>{{ results.stationarity.p_value|round(4) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Critical Value (1%)</th>
+                                        <td>{{ results.stationarity.critical_values['1%']|round(4) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Critical Value (5%)</th>
+                                        <td>{{ results.stationarity.critical_values['5%']|round(4) }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Critical Value (10%)</th>
+                                        <td>{{ results.stationarity.critical_values['10%']|round(4) }}</td>
+                                    </tr>
+                                </table>
+
+                                <div class="alert {{ 'alert-success' if results.stationarity.p_value < 0.05 else 'alert-warning' }} mt-3">
+                                    <strong>Interpretation:</strong>
+                                    {% if results.stationarity.p_value < 0.05 %}
+                                    The time series appears to be stationary (p-value < 0.05).
+                                    {% else %}
+                                    The time series appears to be non-stationary (p-value >= 0.05). Differencing may be required.
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <p>No stationarity test results available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACF/PACF Tab -->
+                    <div class="tab-pane fade" id="acf-pacf" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Autocorrelation Function (ACF) & Partial Autocorrelation Function (PACF)</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if results.plots.acf_pacf %}
+                                <div class="plot-container">
+                                    <img src="data:image/png;base64,{{ results.plots.acf_pacf }}" class="img-fluid" alt="ACF and PACF plots">
+                                </div>
+
+                                <div class="mt-3">
+                                    <h6>What to Look For:</h6>
+                                    <ul>
+                                        <li><strong>ACF:</strong> Measures correlation between the series and its lags. Gradual decay suggests AR process, sharp cutoffs suggest MA process.</li>
+                                        <li><strong>PACF:</strong> Measures direct correlation between the series and its lags. Sharp cutoffs after lag p suggest AR(p) process.</li>
+                                        <li>Significant spikes at seasonal lags (e.g., 12 for monthly data) suggest seasonality.</li>
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <p>No ACF/PACF plots available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Decomposition Tab -->
+                    <div class="tab-pane fade" id="decomposition" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Time Series Decomposition</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if results.plots.decomposition %}
+                                <div class="plot-container">
+                                    <img src="data:image/png;base64,{{ results.plots.decomposition }}" class="img-fluid" alt="Time Series Decomposition">
+                                </div>
+
+                                <div class="mt-3">
+                                    <h6>Components:</h6>
+                                    <ul>
+                                        <li><strong>Trend:</strong> The long-term progression of the series.</li>
+                                        <li><strong>Seasonal:</strong> Patterns that repeat with fixed period.</li>
+                                        <li><strong>Residual:</strong> The random variation in the series after removing trend and seasonality.</li>
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <p>No decomposition plot available. This might be due to insufficient data or inability to identify clear seasonal patterns.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Predictions Tab -->
+                    <div class="tab-pane fade" id="predictions" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Model Predictions</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if results.plots.predictions %}
+                                <div class="plot-container">
+                                    <img src="data:image/png;base64,{{ results.plots.predictions }}" class="img-fluid" alt="Model Predictions">
+                                </div>
+
+                                <div class="mt-3">
+                                    <h6>Observations:</h6>
+                                    <ul>
+                                        <li>Compare the predicted values (red dashed line) with the actual values (green line).</li>
+                                        <li>Assess how well the model captures the patterns in the test data.</li>
+                                        <li>Note areas where the model performs well or poorly.</li>
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <p>No predictions plot available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Residuals Tab -->
+                    <div class="tab-pane fade" id="residuals" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Residual Analysis</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if results.plots.residuals %}
+                                <div class="plot-container">
+                                    <img src="data:image/png;base64,{{ results.plots.residuals }}" class="img-fluid" alt="Residuals Plot">
+                                </div>
+
+                                {% if results.plots.qq_plot %}
+                                <div class="plot-container mt-4">
+                                    <h6>Q-Q Plot of Residuals</h6>
+                                    <img src="data:image/png;base64,{{ results.plots.qq_plot }}" class="img-fluid" alt="QQ Plot">
+                                </div>
+                                {% endif %}
+
+                                {% if results.plots.residual_dist %}
+                                <div class="plot-container mt-4">
+                                    <h6>Distribution of Residuals</h6>
+                                    <img src="data:image/png;base64,{{ results.plots.residual_dist }}" class="img-fluid" alt="Residual Distribution">
+                                </div>
+                                {% endif %}
+
+                                <div class="mt-3">
+                                    <h6>What to Look For:</h6>
+                                    <ul>
+                                        <li><strong>Randomness:</strong> Residuals should appear random with no clear pattern.</li>
+                                        <li><strong>Zero Mean:</strong> Residuals should be centered around zero.</li>
+                                        <li><strong>Constant Variance:</strong> The spread should be consistent over time (homoscedasticity).</li>
+                                        <li><strong>Normality:</strong> The Q-Q plot should follow the diagonal line if residuals are normally distributed.</li>
+                                    </ul>
+                                </div>
+                                {% else %}
+                                <p>No residual analysis plots available.</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
